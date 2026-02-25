@@ -1,0 +1,2 @@
+# PAID
+Scripts paid
