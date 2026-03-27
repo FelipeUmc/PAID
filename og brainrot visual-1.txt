@@ -1,0 +1,419 @@
+-- leaked by https://discord.gg/WfTDsBPR9n join to buy cheap sources that dont scam
+
+-- Visual OG
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Delete old GUI if exists
+local function deleteOldGUI()
+    local oldGui = playerGui:FindFirstChild("OGVisual")
+    if oldGui then
+        oldGui:Destroy()
+    end
+end
+
+deleteOldGUI()
+
+-- Create main GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "OGVisual"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- Main UI
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 240, 0, 160)
+mainFrame.Position = UDim2.new(1, -260, 1, -180) -- Bottom right corner
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black
+mainFrame.BackgroundTransparency = 0
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- White outline
+local outlineStroke = Instance.new("UIStroke")
+outlineStroke.Color = Color3.fromRGB(255, 255, 255)
+outlineStroke.Thickness = 2
+outlineStroke.Parent = mainFrame
+
+-- Animated gradient
+local outlineGradient = Instance.new("UIGradient")
+outlineGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(200, 200, 255)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(150, 150, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+})
+outlineGradient.Rotation = 0
+outlineGradient.Parent = outlineStroke
+
+-- Animate outline
+task.spawn(function()
+    local rotation = 0
+    while outlineGradient and outlineGradient.Parent do
+        rotation = (rotation + 2) % 360
+        outlineGradient.Rotation = rotation
+        task.wait(0.03)
+    end
+end)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 35)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "Choose Block"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.Parent = mainFrame
+
+-- Discord text
+local discordText = Instance.new("TextLabel")
+discordText.Name = "DiscordText"
+discordText.Size = UDim2.new(1, 0, 0, 18)
+discordText.Position = UDim2.new(0, 0, 0, 35)
+discordText.BackgroundTransparency = 1
+discordText.Text = ".gg/u95xTs2BUS"
+discordText.TextColor3 = Color3.fromRGB(200, 200, 200)
+discordText.TextSize = 11
+discordText.Font = Enum.Font.Gotham
+discordText.TextXAlignment = Enum.TextXAlignment.Center
+discordText.Parent = mainFrame
+
+-- Dropdown
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Name = "DropdownButton"
+dropdownButton.Size = UDim2.new(0.9, 0, 0, 40)
+dropdownButton.Position = UDim2.new(0.05, 0, 0, 60)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+dropdownButton.Text = "Select an option ▼"
+dropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropdownButton.TextSize = 14
+dropdownButton.Font = Enum.Font.GothamMedium
+dropdownButton.BorderSizePixel = 0
+dropdownButton.ZIndex = 10
+dropdownButton.Parent = mainFrame
+
+local dropdownCorner = Instance.new("UICorner")
+dropdownCorner.CornerRadius = UDim.new(0, 8)
+dropdownCorner.Parent = dropdownButton
+
+-- Dropdown List
+local dropdownList = Instance.new("Frame")
+dropdownList.Name = "DropdownList"
+dropdownList.Size = UDim2.new(0.9, 0, 0, 0)
+dropdownList.Position = UDim2.new(0.05, 0, 0, 101) -- Positioned to overlap confirm button
+dropdownList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+dropdownList.BorderSizePixel = 0
+dropdownList.Visible = false
+dropdownList.ZIndex = 100 -- Very high z-index to ensure it's on top
+dropdownList.Parent = mainFrame
+
+local listCorner = Instance.new("UICorner")
+listCorner.CornerRadius = UDim.new(0, 8)
+listCorner.Parent = dropdownList
+
+-- Options container
+local optionsContainer = Instance.new("Frame")
+optionsContainer.Name = "OptionsContainer"
+optionsContainer.Size = UDim2.new(1, 0, 1, 0)
+optionsContainer.BackgroundTransparency = 1
+optionsContainer.ZIndex = 101
+optionsContainer.Parent = dropdownList
+
+-- Layout for options
+local optionsLayout = Instance.new("UIListLayout")
+optionsLayout.Parent = optionsContainer
+optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+optionsLayout.Padding = UDim.new(0, 2)
+
+-- Options with their specific colors
+local options = {
+    {name = "Secret", color = Color3.fromRGB(255, 255, 255)}, -- White
+    {name = "Mythic", color = Color3.fromRGB(255, 50, 50)}, -- Red
+    {name = "Brainrot God", color = Color3.fromRGB(180, 100, 255)} -- Purple
+}
+
+local optionButtons = {}
+local selectedOption = nil
+
+for i, optionData in ipairs(options) do
+    local optionBtn = Instance.new("TextButton")
+    optionBtn.Name = optionData.name .. "Option"
+    optionBtn.Size = UDim2.new(1, 0, 0, 30)
+    optionBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    optionBtn.Text = optionData.name
+    optionBtn.TextColor3 = optionData.color
+    optionBtn.TextSize = 13
+    optionBtn.Font = Enum.Font.GothamMedium
+    optionBtn.BorderSizePixel = 0
+    optionBtn.ZIndex = 102
+    optionBtn.Parent = optionsContainer
+    
+    -- Hover effect
+    optionBtn.MouseEnter:Connect(function()
+        optionBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    end)
+    
+    optionBtn.MouseLeave:Connect(function()
+        optionBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    end)
+    
+    -- Selection
+    optionBtn.MouseButton1Click:Connect(function()
+        selectedOption = optionData.name
+        dropdownButton.Text = optionData.name .. " ▼"
+        
+        -- Close dropdown
+        dropdownOpen = false
+        TweenService:Create(dropdownList, TweenInfo.new(0.2), {
+            Size = UDim2.new(0.9, 0, 0, 0)
+        }):Play()
+        task.wait(0.2)
+        dropdownList.Visible = false
+    end)
+    
+    table.insert(optionButtons, optionBtn)
+end
+
+-- Dropdown toggle
+local dropdownOpen = false
+dropdownButton.MouseButton1Click:Connect(function()
+    dropdownOpen = not dropdownOpen
+    
+    if dropdownOpen then
+        dropdownList.Visible = true
+        dropdownList.Size = UDim2.new(0.9, 0, 0, 0)
+        TweenService:Create(dropdownList, TweenInfo.new(0.25), {
+            Size = UDim2.new(0.9, 0, 0, #options * 30 + (#options - 1) * 2 + 8)
+        }):Play()
+    else
+        TweenService:Create(dropdownList, TweenInfo.new(0.2), {
+            Size = UDim2.new(0.9, 0, 0, 0)
+        }):Play()
+        task.wait(0.2)
+        dropdownList.Visible = false
+    end
+end)
+
+-- Close dropdown when clicking outside
+UserInputService.InputBegan:Connect(function(input)
+    if dropdownOpen and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        task.wait()
+        local mousePos = UserInputService:GetMouseLocation()
+        local dropdownBtnPos = dropdownButton.AbsolutePosition
+        local dropdownBtnSize = dropdownButton.AbsoluteSize
+        local listPos = dropdownList.AbsolutePosition
+        local listSize = dropdownList.AbsoluteSize
+        
+        local clickedOnBtn = (mousePos.X >= dropdownBtnPos.X and mousePos.X <= dropdownBtnPos.X + dropdownBtnSize.X and
+                             mousePos.Y >= dropdownBtnPos.Y and mousePos.Y <= dropdownBtnPos.Y + dropdownBtnSize.Y)
+        local clickedOnList = (mousePos.X >= listPos.X and mousePos.X <= listPos.X + listSize.X and
+                              mousePos.Y >= listPos.Y and mousePos.Y <= listPos.Y + listSize.Y)
+        
+        if not clickedOnBtn and not clickedOnList then
+            dropdownOpen = false
+            TweenService:Create(dropdownList, TweenInfo.new(0.2), {
+                Size = UDim2.new(0.9, 0, 0, 0)
+            }):Play()
+            task.wait(0.2)
+            dropdownList.Visible = false
+        end
+    end
+end)
+
+-- Confirm Button
+local confirmButton = Instance.new("TextButton")
+confirmButton.Name = "ConfirmButton"
+confirmButton.Size = UDim2.new(0.9, 0, 0, 35)
+confirmButton.Position = UDim2.new(0.05, 0, 0, 110)
+confirmButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+confirmButton.Text = "CONFIRM"
+confirmButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+confirmButton.TextSize = 16
+confirmButton.Font = Enum.Font.GothamBold
+confirmButton.BorderSizePixel = 0
+confirmButton.ZIndex = 5
+confirmButton.Parent = mainFrame
+
+local confirmCorner = Instance.new("UICorner")
+confirmCorner.CornerRadius = UDim.new(0, 8)
+confirmCorner.Parent = confirmButton
+
+-- Hover effect
+confirmButton.MouseEnter:Connect(function()
+    TweenService:Create(confirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+end)
+
+confirmButton.MouseLeave:Connect(function()
+    TweenService:Create(confirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+end)
+
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -28, 0, 5)
+closeButton.BackgroundTransparency = 1
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+closeButton.TextSize = 16
+closeButton.Font = Enum.Font.GothamBold
+closeButton.ZIndex = 5
+closeButton.Parent = mainFrame
+
+closeButton.MouseEnter:Connect(function()
+    closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+end)
+
+closeButton.MouseLeave:Connect(function()
+    closeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- ================== REPLACEMENT FUNCTIONS ==================
+
+-- Function to replace text and prices
+local function replaceText(searchText, replacementText, targetColor, priceSearch, priceReplace)
+    print("1")
+    local count = 0
+    local priceCount = 0
+    
+    -- Search in workspace
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            -- Replace the main text
+            if searchText == "Brainrot God" then
+                if obj.Text and (obj.Text == searchText or obj.Text:find(searchText)) then
+                    obj.Text = replacementText
+                    obj.TextColor3 = targetColor
+                    
+                    if not obj:FindFirstChildOfClass("UIStroke") then
+                        local stroke = Instance.new("UIStroke")
+                        stroke.Color = Color3.fromRGB(0, 0, 0)
+                        stroke.Thickness = 2
+                        stroke.Parent = obj
+                    end
+                    count = count + 1
+                end
+            else
+                if obj.Text == searchText then
+                    obj.Text = replacementText
+                    obj.TextColor3 = targetColor
+                    
+                    if not obj:FindFirstChildOfClass("UIStroke") then
+                        local stroke = Instance.new("UIStroke")
+                        stroke.Color = Color3.fromRGB(0, 0, 0)
+                        stroke.Thickness = 2
+                        stroke.Parent = obj
+                    end
+                    count = count + 1
+                end
+            end
+            
+            -- Replace the price
+            if obj.Text and obj.Text:find(priceSearch) then
+                obj.Text = obj.Text:gsub(priceSearch, priceReplace)
+                priceCount = priceCount + 1
+            end
+        end
+    end
+    
+    -- Search in PlayerGui
+    if player and player:FindFirstChild("PlayerGui") then
+        for _, obj in ipairs(player.PlayerGui:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                -- Replace the main text
+                if searchText == "Brainrot God" then
+                    if obj.Text and (obj.Text == searchText or obj.Text:find(searchText)) then
+                        obj.Text = replacementText
+                        obj.TextColor3 = targetColor
+                        
+                        if not obj:FindFirstChildOfClass("UIStroke") then
+                            local stroke = Instance.new("UIStroke")
+                            stroke.Color = Color3.fromRGB(0, 0, 0)
+                            stroke.Thickness = 2
+                            stroke.Parent = obj
+                        end
+                        count = count + 1
+                    end
+                else
+                    if obj.Text == searchText then
+                        obj.Text = replacementText
+                        obj.TextColor3 = targetColor
+                        
+                        if not obj:FindFirstChildOfClass("UIStroke") then
+                            local stroke = Instance.new("UIStroke")
+                            stroke.Color = Color3.fromRGB(0, 0, 0)
+                            stroke.Thickness = 2
+                            stroke.Parent = obj
+                        end
+                        count = count + 1
+                    end
+                end
+                
+                -- Replace the price
+                if obj.Text and obj.Text:find(priceSearch) then
+                    obj.Text = obj.Text:gsub(priceSearch, priceReplace)
+                    priceCount = priceCount + 1
+                end
+            end
+        end
+    end
+    
+    if count > 0 or priceCount > 0 then
+        print("2")
+        print("✅")
+    else
+        print("❌ No '" .. searchText .. "' text or '" .. priceSearch .. "' price found")
+    end
+end
+
+-- Confirm button action
+confirmButton.MouseButton1Click:Connect(function()
+    if not selectedOption then
+        -- Flash the button to indicate selection needed
+        TweenService:Create(dropdownButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 30, 30)}):Play()
+        task.wait(0.1)
+        TweenService:Create(dropdownButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
+        return
+    end
+    
+    -- Execute the appropriate function with correct price replacements
+    if selectedOption == "Secret" then
+        replaceText("Secret", "OG", Color3.fromRGB(255, 255, 255), "750M", "500T")
+    elseif selectedOption == "Mythic" then
+        replaceText("Mythic", "OG", Color3.fromRGB(255, 50, 50), "2.5M", "500T")
+    elseif selectedOption == "Brainrot God" then
+        replaceText("Brainrot God", "OG", Color3.fromRGB(180, 100, 255), "15M", "500T")
+    end
+    
+    -- Visual feedback
+    local originalColor = confirmButton.BackgroundColor3
+    TweenService:Create(confirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 100, 0)}):Play()
+    task.wait(0.3)
+    TweenService:Create(confirmButton, TweenInfo.new(0.2), {BackgroundColor3 = originalColor}):Play()
+    
+    confirmButton.Text = "✓ DONE"
+    task.wait(1)
+    confirmButton.Text = "CONFIRM"
+end)
